@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { UsersService } from '@/modules/users/domain/users.service';
+import { UsersService } from '@/modules/users/domain/services/users.service';
 
 describe('UsersService', () => {
   it('list maps rows to view with total', async () => {

@@ -6,8 +6,8 @@ This example stitches the patterns together: types barrel, Prisma select + pipes
 
 - modules/users/types.ts
 - modules/users/data/selects.ts
-- modules/users/domain/views.ts
-- modules/users/domain/users.service.ts
+- modules/users/domain/projections/list.projection.ts
+- modules/users/domain/services/users.service.ts
 - modules/users/contracts/events.ts
 - modules/users/events/onUserCreated.ts
 - modules/users/jobs/syncProfile.job.ts
@@ -19,7 +19,7 @@ This example stitches the patterns together: types barrel, Prisma select + pipes
 ```ts
 // modules/users/types.ts
 export type { CreateUserInput } from './contracts';
-export type { UserListItem } from './domain/views';
+export type { UserListItem } from './domain/projections/list.projection';
 ```
 
 ## Select Rules
@@ -31,10 +31,12 @@ export const userListSelect = { id: true, email: true, name: true, createdAt: tr
 export type UserListRow = Prisma.UserGetPayload<{ select: typeof userListSelect }>;
 ```
 
-## View Types + Pipes
+## Projections (API view models)
+
+Note: “Projections” are backend output shapes and mapping functions for API responses — not UI/React views. They live under `domain/projections/*` to avoid confusion with UI components.
 
 ```ts
-// modules/users/domain/views.ts
+// modules/users/domain/projections/list.projection.ts
 import type { UserListRow } from '../data/selects';
 export type UserListItem = { id: string; email: string; name: string; createdAt: string };
 export const toUserListItem = (row: UserListRow): UserListItem => ({
@@ -48,11 +50,11 @@ export const toUserListItem = (row: UserListRow): UserListItem => ({
 ## Service (with cache)
 
 ```ts
-// modules/users/domain/users.service.ts
+// modules/users/domain/services/users.service.ts
 import type { Cache } from '@/core/services';
 import type { PrismaClient } from '@prisma/client';
 import { userListSelect, type UserListRow } from '../data/selects';
-import { toUserListItem, type UserListItem } from './views';
+import { toUserListItem, type UserListItem } from '../projections/list.projection';
 
 export class UsersService {
   constructor(
@@ -146,12 +148,14 @@ export const POST = HttpRequest(CreateUserRequest)({ auth: true }, async functio
 - `/users` — server component + server action using Services directly.
 - `/users/server-action` — explicit server action example (Services-based).
 - `/users/api-example` — server action proxy calling the API route.
+- `/users/server-action-redirect` — server action with Post/Redirect/Get (revalidates, then `redirect()` for clean history and to avoid returning RSC payload).
+- `/users/client-hook` — server-rendered initial data + client hook (`useUsersQuery`) that reads from the API and keeps the list fresh without navigation.
 
 ## Module Manifest
 
 ```ts
 // modules/users/index.ts
-import { UsersService } from './domain/users.service';
+import { UsersService } from './domain/services/users.service';
 import { registerUserEvents } from './events/onUserCreated';
 import { registerJobProcessors } from './jobs/syncProfile.job';
 

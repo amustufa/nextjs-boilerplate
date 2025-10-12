@@ -28,6 +28,12 @@ export class UsersService {
 }
 ```
 
+### Named Types Only in Public APIs
+
+- Do not use inline object types in exported service/repository/http signatures (e.g., `Promise<{ id: string; ... }>`).
+- Define named types or interfaces (e.g., `UserRecord`, `UsersListResult`) and export them from the module’s `types.ts` barrel.
+- This keeps contracts consistent, discoverable, and easier to refactor.
+
 ## Data access (Prisma 6.7 multi-file, edge-aware)
 
 ```ts
@@ -152,3 +158,25 @@ This achieves:
 - Strict compile‑time types from Prisma selects.
 - No DTO classes; simple typed pipes convert one type to another.
 - Clear per‑view projection rules and transformations.
+
+## Projections (API view models)
+
+- To avoid confusion with UI “views”, place API output shapes and mapping functions under a `projections/` folder in the domain layer.
+- Example: `modules/users/domain/projections/list.projection.ts` defines the API view model for a list endpoint and the projection pipe:
+
+```ts
+// modules/users/domain/projections/list.projection.ts
+import type { UserListRow } from '@/modules/users/data/selects';
+
+export type UserListItem = { id: string; email: string; name: string; createdAt: string };
+export const toUserListItem = (row: UserListRow): UserListItem => ({
+  id: row.id,
+  email: row.email,
+  name: row.name,
+  createdAt: row.createdAt.toISOString(),
+});
+
+export type UsersListResult = { items: UserListItem[]; total: number };
+```
+
+- Export public projection types via the module types barrel (e.g., `modules/users/types.ts`) and import them in services and HTTP handlers.

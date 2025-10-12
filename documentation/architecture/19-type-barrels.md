@@ -17,12 +17,13 @@ export type CreateUserInput = z.infer<typeof CreateUserSchema>;
 ```ts
 // modules/users/domain/views.ts (public view types)
 export type UserListItem = { id: string; email: string; name: string; createdAt: string };
+export type UsersListResult = { items: UserListItem[]; total: number };
 ```
 
 ```ts
 // modules/users/types.ts (module-level types barrel)
 export type { CreateUserInput } from './contracts';
-export type { UserListItem } from './domain/views';
+export type { UserListItem, UsersListResult } from './domain/views';
 ```
 
 ```ts

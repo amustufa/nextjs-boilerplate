@@ -20,6 +20,10 @@ These guidelines ensure changes align with the architecture and remain safe, typ
 - Module boundaries: only import across modules via `contracts/`, public `types.ts`, or the Services Registry. No deep imports.
 - Prisma schemas are module-local: add `.prisma` under `modules/*/schema`, and run `pnpm prisma:collect` before generate/migrate.
 - Routing location: Keep routable files (pages, route handlers) under `app/`. Use `modules/*/ui/components/*` for reusable UI fragments only.
+  - UI structure under `modules/<module>/ui`:
+    - `components/`, `fragments/`, `forms/` are props-only; do not import Services/core/domain/data or use fetch/cookies/revalidate.
+    - `loaders/` are server-only helpers (no JSX) and may call `getServices`.
+    - `hooks/` may fetch client-side (React Query/SWR/custom) for UX smoothing; hydrate from server loaders and revalidate in background.
 
 ### Runtime Choice (Edge vs Node)
 
@@ -84,6 +88,9 @@ These guidelines ensure changes align with the architecture and remain safe, typ
 - [ ] For GET lists, ETag/304 considered when stable; for protected mutations, JWT + policy enforced.
 - [ ] UI state is server-first; no cookies used for business state; client state kept ephemeral.
 - [ ] Routable files live in `app/` (pages/routes/actions); `modules/*/ui` contains reusable components only.
+- [ ] No inline object types in exported signatures (services/repos/http); promote to named types and export via module types barrel.
+- [ ] UI rules: components/fragments/forms are props-only (no Services/fetch/cookies/revalidate); loaders are server-only (no JSX).
+- [ ] If client-side fetching is needed, use `ui/hooks/*` (React Query/SWR/custom) and hydrate from server loaders; do not fetch in components.
 
 ## Common Mistakes (and Correct Patterns)
 

@@ -1,7 +1,7 @@
 declare global {
   interface AppServiceNamespaces {
     users: {
-      service: import('./domain/users.service').UsersService;
+      service: import('./domain/services/users.service').UsersService;
     };
   }
 }

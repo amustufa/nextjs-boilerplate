@@ -21,6 +21,9 @@
 - Type barrels: Each module has its own `types.ts`. The global `modules/types.ts` aggregates all module type barrels.
 - Request builder: Define Zod specs once with `defineRequest` and use `HttpRequest(RequestSpec)(opts, handler)` to implement routes.
 - Routing location: pages and route handlers must live under `app/`. Use `modules/*/ui/components/*` for reusable UI only; compose them in `app/*` routes.
+  - UI structure in `modules/<name>/ui`:
+    - `components/`, `fragments/`, `forms/` are props-only and must not import Services/core/domain/data or use fetch/cookies/revalidate.
+    - `loaders/` are server-only helpers (no JSX) and may use `getServices`.
 - Normalized envelopes: Return `{ ok, data?, error?, meta? }`; include pagination meta for list endpoints.
 
 ## Runtime Choice (Edge vs Node)
@@ -63,3 +66,9 @@
 - Tests cover service logic and endpoints; assert envelope shape and pagination meta.
 - Consider ETag/304 for stable GET lists; enforce JWT + policy for protected mutations.
 - UI is server-first; no cookies used for business state; client state remains ephemeral.
+- No inline object types in exported signatures (services/repos/http); use named types/interfaces exported via the module types barrel.
+- UI placement/rules:
+  - Routable files in `app/`; UI in `modules/*/ui`.
+  - Components/fragments/forms do not use Services/fetch/cookies/revalidate.
+  - Loaders are server-only and contain no JSX.
+  - Client data fetching is allowed only in `modules/*/ui/hooks/*` (React Query/SWR/custom fetch) for smoother UX; hydrate from server loaders.

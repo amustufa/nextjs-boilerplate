@@ -1,8 +1,12 @@
 import type { PrismaClient } from '@prisma/client';
 import type { Cache } from '@/core/services';
 import { userListSelect } from '@/modules/users/data/selects';
-import { toUserListItem, type UserListItem } from './views';
+import {
+  toUserListItem,
+  type UsersListResult,
+} from '@/modules/users/domain/projections/list.projection';
 import type { CreateUserInput } from '@/modules/users/contracts';
+import type { UserRecord } from '@/modules/users/types';
 
 export class UsersService {
   constructor(
@@ -10,13 +14,11 @@ export class UsersService {
     private cache?: Cache,
   ) {}
 
-  async create(
-    data: CreateUserInput,
-  ): Promise<{ id: string; email: string; name: string; createdAt: Date }> {
+  async create(data: CreateUserInput): Promise<UserRecord> {
     return this.prisma.user.create({ data });
   }
 
-  async list(page = 1, perPage = 20): Promise<{ items: UserListItem[]; total: number }> {
+  async list(page = 1, perPage = 20): Promise<UsersListResult> {
     const key = `users:list:${page}:${perPage}`;
     const loader = async () => {
       const [total, rows] = await Promise.all([

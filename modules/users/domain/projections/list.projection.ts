@@ -8,3 +8,5 @@ export const toUserListItem = (row: UserListRow): UserListItem => ({
   name: row.name,
   createdAt: row.createdAt.toISOString(),
 });
+
+export type UsersListResult = { items: UserListItem[]; total: number };

@@ -1,21 +1,15 @@
 // eslint-disable-next-line import-x/no-unresolved
 import 'server-only';
 import { getServices } from '@/core/runtime/services';
-import type { UserListItem } from '@/modules/users/types';
+import type { UserListItem, UsersListResult } from '@/modules/users/types';
 import type { Envelope } from '@/core/types';
 
-export async function loadUsersViaServices(
-  page = 1,
-  perPage = 20,
-): Promise<{ items: UserListItem[]; total: number }> {
+export async function loadUsersViaServices(page = 1, perPage = 20): Promise<UsersListResult> {
   const services = await getServices('node');
   return services.users!.service.list(page, perPage); // { items, total }
 }
 
-export async function loadUsersViaApi(
-  page = 1,
-  perPage = 20,
-): Promise<{ items: UserListItem[]; total: number }> {
+export async function loadUsersViaApi(page = 1, perPage = 20): Promise<UsersListResult> {
   const res = await fetch(`http://localhost/users/api?page=${page}&perPage=${perPage}`, {
     // server-side fetch; in real deployments, use absolute URL or NEXT_PUBLIC_SITE_URL
     cache: 'no-store',

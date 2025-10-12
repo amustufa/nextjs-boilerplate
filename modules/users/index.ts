@@ -1,6 +1,6 @@
 import type { Module } from '@/core/module';
 import type { ServicesBuilder } from '@/core/services';
-import { UsersService } from './domain/users.service';
+import { UsersService } from './domain/services/users.service';
 import { registerUserEvents } from './events/onUserCreated';
 import { registerJobProcessors } from './jobs/syncProfile.job';
 

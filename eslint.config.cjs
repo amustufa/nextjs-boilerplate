@@ -20,6 +20,129 @@ module.exports = [
       globals: { ...globals.node, ...globals.browser },
     },
   },
+  // UI structure enforcement: components/fragments/forms must be props-only (no services/fetch/cookies/revalidate)
+  {
+    files: [
+      'modules/**/ui/components/**/*.{ts,tsx}',
+      'modules/**/ui/fragments/**/*.{ts,tsx}',
+      'modules/**/ui/forms/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/core/**',
+                '@/core/runtime/**',
+                '@/modules/*/domain/**',
+                '@/modules/*/data/**',
+              ],
+              message:
+                'UI components/fragments/forms must not import core runtime or module domain/data. Accept props only and compose.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        { selector: "CallExpression[callee.name='fetch']", message: 'Do not fetch in UI components/fragments/forms. Use server loaders.' },
+        { selector: "CallExpression[callee.name='cookies']", message: 'Do not access cookies in UI; pass data via props.' },
+        { selector: "CallExpression[callee.name='revalidatePath']", message: 'Do not call revalidate APIs in UI; use server actions.' },
+        { selector: "CallExpression[callee.name='revalidateTag']", message: 'Do not call revalidate APIs in UI; use server actions.' },
+      ],
+    },
+  },
+  // UI loaders: server-only, no JSX, no 'use client'
+  {
+    files: [
+      'modules/**/ui/loaders.{ts,tsx}',
+      'modules/**/ui/loaders/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: "ExpressionStatement[directive='use client']", message: 'UI loaders must be server-only. Remove \"use client\".' },
+        { selector: 'JSXElement', message: 'UI loaders must not render JSX.' },
+        { selector: 'JSXFragment', message: 'UI loaders must not render JSX.' },
+      ],
+    },
+  },
+  // UI hooks: client-only data fetching is allowed here (React Query/SWR/custom)
+  // Still forbid core/runtime and domain/data imports; discourage cookies/revalidate in hooks
+  {
+    files: [
+      'modules/**/ui/hooks/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '@/core/**',
+                '@/core/runtime/**',
+                '@/modules/*/domain/**',
+                '@/modules/*/data/**',
+              ],
+              message:
+                'UI hooks must not import core runtime or module domain/data. Call API routes; hydrate from server loaders.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        { selector: "CallExpression[callee.name='cookies']", message: 'Do not access cookies in UI hooks; use headers/auth and server loaders.' },
+        { selector: "CallExpression[callee.name='revalidatePath']", message: 'Do not call revalidate APIs in UI hooks; use server actions.' },
+        { selector: "CallExpression[callee.name='revalidateTag']", message: 'Do not call revalidate APIs in UI hooks; use server actions.' },
+      ],
+    },
+  },
+  // UI: no inline object types in exported signatures/props
+  {
+    files: ['modules/**/ui/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: [
+            'ExportNamedDeclaration > FunctionDeclaration > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration VariableDeclaration VariableDeclarator > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration ClassDeclaration MethodDefinition > TSTypeAnnotation TSTypeLiteral',
+            "ExportNamedDeclaration :matches(FunctionDeclaration, VariableDeclarator, MethodDefinition) TSTypeReference[ typeName.name='Promise' ] TSTypeParameterInstantiation > TSTypeLiteral",
+          ].join(', '),
+          message:
+            'Use a named type/interface exported via the module types barrel instead of inline object types in exported UI signatures.',
+        },
+      ],
+    },
+  },
+  // Module APIs (domain/data/http): enforce named types in exported signatures
+  {
+    files: [
+      'modules/**/domain/**/*.{ts,tsx}',
+      'modules/**/data/**/*.{ts,tsx}',
+      'modules/**/http/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: [
+            'ExportNamedDeclaration > FunctionDeclaration > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration VariableDeclaration VariableDeclarator > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration ClassDeclaration MethodDefinition > TSTypeAnnotation TSTypeLiteral',
+            "ExportNamedDeclaration :matches(FunctionDeclaration, VariableDeclarator, MethodDefinition) TSTypeReference[ typeName.name='Promise' ] TSTypeParameterInstantiation > TSTypeLiteral",
+          ].join(', '),
+          message:
+            'Exported APIs must use named types/interfaces; avoid inline object types (e.g., Promise<{ ... }>). Define types under domain/projections or module types barrel.',
+        },
+      ],
+    },
+  },
   // Base JS/TS config without TS-typed rules (applies to all files)
   ...compat.config({
     plugins: ['import-x', '@next/eslint-plugin-next'],
@@ -106,6 +229,29 @@ module.exports = [
       '@typescript-eslint/no-unsafe-call': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+    },
+  },
+  // Enforce named types for exported signatures in modules (no inline object types)
+  {
+    files: ['modules/**/domain/**/*.ts', 'modules/**/data/**/*.ts', 'modules/**/http/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: [
+            // export function foo(): {...}
+            'ExportNamedDeclaration > FunctionDeclaration > TSTypeAnnotation TSTypeLiteral',
+            // export const foo = (..): {...} =>
+            'ExportNamedDeclaration VariableDeclaration VariableDeclarator > TSTypeAnnotation TSTypeLiteral',
+            // export class S { method(...): {...} }
+            'ExportNamedDeclaration ClassDeclaration MethodDefinition > TSTypeAnnotation TSTypeLiteral',
+            // Promise<{...}> in exported returns
+            "ExportNamedDeclaration :matches(FunctionDeclaration, VariableDeclarator, MethodDefinition) TSTypeReference[ typeName.name='Promise' ] TSTypeParameterInstantiation > TSTypeLiteral",
+          ].join(', '),
+          message:
+            "Use a named type/interface from the module’s types barrel instead of an inline object type in exported signatures.",
+        },
+      ],
     },
   },
   // Allow runtime service wiring to import adapters directly

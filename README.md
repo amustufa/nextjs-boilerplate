@@ -55,3 +55,11 @@ Routing Note
 - Edge handlers must be thin: validate, authorize (JWT), simple reads/compute, return a response. Do not bind module boot logic, event listeners, job processors, or Node-only adapters in edge.
 - Keep any handler needing events/queue/logger or direct DB TCP on Node (`runtime = 'node' | 'nodejs'`).
 - If using Prisma on edge, use `@prisma/client/edge` with a proxy (Accelerate/Data Proxy). Otherwise, keep DB-bound handlers on Node.
+
+## Users Module Demo Routes
+
+- `/users` — server component + server action (Services-based), SPA-like.
+- `/users/server-action` — explicit server action variant (Services-based).
+- `/users/api-example` — server action proxy that calls the API handler; page reads via API.
+- `/users/server-action-redirect` — PRG variant; server action revalidates then `redirect()` to avoid returning RSC payload and prevent resubmits.
+- `/users/client-hook` — server renders initial list; client fragment uses `useUsersQuery` to fetch from `/users/api` and keep data fresh.

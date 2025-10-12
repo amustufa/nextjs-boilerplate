@@ -25,7 +25,17 @@
 - Contracts: request schemas and event/job payload types under `modules/<name>/contracts`.
 - Data: `data/selects.ts` (Prisma selects) and `domain/views.ts` (pipes → view types).
 - HTTP: Zod specs in `http/requests/*` and route handlers in `http/*.api.ts` using `HttpRequest`.
-- UI: reusable components under `modules/<name>/ui/components/*`; keep routable files under `app/` and compose components there.
+- UI: structure under `modules/<name>/ui`:
+  - `components/*`: pure presentational components (props-only; no Services/fetch/cookies/revalidate).
+  - `fragments/*`: composite UI pieces composing components (same rules as components).
+  - `forms/*`: form components that accept a server action via `action` prop; no Services/fetch inside.
+  - `loaders/` (or `loaders.ts`): server-only data loaders; may call `getServices`; no JSX.
+- `hooks/*`: client-only UI hooks for ephemeral state (no business logic/state).
+  - Client-side data hooks: allowed under `ui/hooks/*` using React Query/SWR or simple fetch.
+    - Hydrate from server loaders (initialData) and background revalidate for smoother UX.
+    - Call API routes for reads; mutations should go through server actions or API handlers exposed as mutate functions.
+  - `styles/*` and `tests/*` optional.
+  - Keep pages/route handlers and server actions in `app/` and compose module UI there.
 - Events/Jobs: defined under `events/*` and `jobs/*`; registered in `boot()`.
 - Types: public types re-exported from `modules/<name>/types.ts`; optional aggregator in `modules/types.ts`.
 - Schema: module-local `.prisma` files under `schema/`.
