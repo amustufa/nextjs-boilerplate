@@ -1,0 +1,10 @@
+// datasource + generator only; module schemas collected under prisma/schemas/*.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
