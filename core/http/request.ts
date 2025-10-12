@@ -4,9 +4,9 @@ import { getServices } from '@/core/runtime/services';
 import { ok, fail } from '@/core/http/response';
 import { normalizeError } from '@/core/http/errors';
 import type { Services } from '@/core/services';
-import type { AuthUser } from '@/core/http/auth';
+import type { AuthUser, Policy } from '@/core/http/auth';
 import { getAuthUser } from '@/core/http/auth';
-import { unauthorized, tooManyRequests } from '@/core/http/middleware';
+import { unauthorized, tooManyRequests, forbid } from '@/core/http/middleware';
 import {
   defaultKeyBuilder,
   getDefaultRateLimitPolicy,
@@ -20,11 +20,24 @@ type Spec<B extends ZodTypeAny, Q extends ZodTypeAny, P extends ZodTypeAny> = {
   query: Q;
   params: P;
 };
+export type PolicyCheck<T = unknown> = {
+  policy: Policy<T>;
+  resource?: (t: RequestTools<unknown, unknown, unknown>) => Promise<T> | T;
+  when?: (t: RequestTools<unknown, unknown, unknown>) => boolean;
+  fail?: { code?: string; message?: string };
+};
+export type PolicyCheckFn = (
+  t: RequestTools<unknown, unknown, unknown>,
+) => Promise<boolean> | boolean;
+
 type Opts = {
   auth?: boolean;
   runtime?: 'node' | 'edge';
   status?: number;
   rateLimit?: false | RateLimitPolicy;
+  policies?: (PolicyCheck | PolicyCheckFn)[];
+  policiesMode?: 'all' | 'any';
+  policiesFail?: { code?: string; message?: string };
 };
 
 export type RequestTools<B, Q, P> = {
@@ -114,6 +127,50 @@ export function HttpRequest<B extends ZodTypeAny, Q extends ZodTypeAny, P extend
                 })
               : limit(key, { capacity: policy.capacity, refillPerSec: policy.refillPerSec });
             if (!res.allowed) return tooManyRequests(res.retryAfterSec ?? 1, traceId);
+          }
+        }
+
+        // Policy checks (require auth: true)
+        if (Array.isArray(opts.policies) && opts.policies.length > 0) {
+          if (!opts.auth || !user) {
+            return unauthorized(traceId);
+          }
+          const mode = opts.policiesMode ?? 'all';
+          const results: boolean[] = [];
+          let firstOverride: { code?: string; message?: string } | undefined;
+          for (const p of opts.policies) {
+            if (typeof p === 'function') {
+              const ok = await Promise.resolve(p(tools));
+              results.push(!!ok);
+            } else {
+              if (p.when && !p.when(tools)) {
+                results.push(true);
+                continue;
+              }
+              const res = p.resource ? await Promise.resolve(p.resource(tools)) : undefined;
+              const ok = await Promise.resolve(
+                (p.policy as Policy<unknown>)(user as AuthUser, res as unknown),
+              );
+              if (!ok && !firstOverride) firstOverride = p.fail;
+              results.push(!!ok);
+            }
+          }
+          const passed = mode === 'all' ? results.every(Boolean) : results.some(Boolean);
+          if (!passed) {
+            const override = firstOverride ?? opts.policiesFail;
+            if (override?.code || override?.message) {
+              return NextResponse.json(
+                fail({
+                  type: 'auth',
+                  code: override.code ?? 'FORBIDDEN',
+                  message: override.message ?? 'Forbidden',
+                  details: null,
+                  ...(traceId ? { traceId } : {}),
+                }),
+                { status: 403 },
+              );
+            }
+            return forbid(traceId);
           }
         }
 

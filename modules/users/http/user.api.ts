@@ -6,24 +6,17 @@ import { z } from 'zod';
 import { USER_CREATED } from '@/modules/users/contracts/events';
 import { enqueueSyncProfile } from '../jobs/syncProfile.job';
 import { etagFor, handleConditionalGet } from '@/core/http/etag';
-import { authorize } from '@/core/http/auth';
 import { canCreateUser } from '@/modules/users/domain/policies/canCreateUser';
 import { NextResponse } from 'next/server';
 
 export const POST = HttpRequest(CreateUserRequest)(
-  { auth: true, rateLimit: { capacity: 20, refillPerSec: 2, useCache: true } },
+  {
+    auth: true,
+    rateLimit: { capacity: 20, refillPerSec: 2, useCache: true },
+    policies: [{ policy: canCreateUser as unknown as import('@/core/http/auth').Policy<unknown> }],
+  },
   async function () {
     const { body } = this.validate();
-    // policy check
-    if (!(await authorize(this.user, canCreateUser))) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: { type: 'auth', code: 'FORBIDDEN', message: 'Forbidden', details: null },
-        },
-        { status: 403 },
-      );
-    }
     const created = await this.services.users!.service.create(body);
     this.services.events.emit(USER_CREATED, { id: created.id, email: created.email });
     await enqueueSyncProfile(this.services, { userId: created.id });
