@@ -6,14 +6,26 @@ import { normalizeError } from '@/core/http/errors';
 import type { Services } from '@/core/services';
 import type { AuthUser } from '@/core/http/auth';
 import { getAuthUser } from '@/core/http/auth';
-import { unauthorized } from '@/core/http/middleware';
+import { unauthorized, tooManyRequests } from '@/core/http/middleware';
+import {
+  defaultKeyBuilder,
+  getDefaultRateLimitPolicy,
+  limit,
+  limitWithCache,
+  type RateLimitPolicy,
+} from '@/core/http/rate-limit';
 
 type Spec<B extends ZodTypeAny, Q extends ZodTypeAny, P extends ZodTypeAny> = {
   body: B;
   query: Q;
   params: P;
 };
-type Opts = { auth?: boolean; runtime?: 'node' | 'edge'; status?: number };
+type Opts = {
+  auth?: boolean;
+  runtime?: 'node' | 'edge';
+  status?: number;
+  rateLimit?: false | RateLimitPolicy;
+};
 
 export type RequestTools<B, Q, P> = {
   validate(): { body: B; query: Q; params: P };
@@ -79,6 +91,32 @@ export function HttpRequest<B extends ZodTypeAny, Q extends ZodTypeAny, P extend
           user,
           request,
         };
+        // Rate limiting (global switch off via RATE_LIMIT_DISABLED)
+        if (process.env.RATE_LIMIT_DISABLED !== 'true') {
+          const policy: RateLimitPolicy | undefined =
+            opts.rateLimit === false
+              ? undefined
+              : (opts.rateLimit ?? getDefaultRateLimitPolicy(request.method));
+          if (policy) {
+            const url = new URL(request.url);
+            const forwarded = request.headers.get('x-forwarded-for') ?? 'ip:unknown';
+            const args: Parameters<NonNullable<RateLimitPolicy['key']>>[0] = {
+              method: request.method,
+              pathname: url.pathname,
+              ...(user?.id ? ({ userId: user.id } as { userId: string }) : {}),
+              ...(forwarded ? ({ ip: forwarded } as { ip: string }) : {}),
+            };
+            const key = (policy.key ?? defaultKeyBuilder)(args);
+            const res = policy.useCache
+              ? await limitWithCache(services.cache, key, {
+                  capacity: policy.capacity,
+                  refillPerSec: policy.refillPerSec,
+                })
+              : limit(key, { capacity: policy.capacity, refillPerSec: policy.refillPerSec });
+            if (!res.allowed) return tooManyRequests(res.retryAfterSec ?? 1, traceId);
+          }
+        }
+
         const data = await Promise.resolve(handler.call(tools, tools));
         if (data && typeof data === 'object' && 'ok' in (data as { ok: unknown })) {
           return NextResponse.json(data, { status: opts.status ?? 200 });
