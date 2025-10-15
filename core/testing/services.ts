@@ -60,12 +60,46 @@ export function createMockServices(overrides: Partial<Services> = {}): Services 
     },
   };
 
+  const jobHandlers = new Map<string, (p: unknown) => Promise<void>>();
+  const timers = new Set<NodeJS.Timeout>();
+  const jobs: NonNullable<Services['jobs']> = {
+    async schedule(name, payload, opts) {
+      const delay =
+        typeof opts.delayMs === 'number'
+          ? opts.delayMs
+          : opts.runAt
+            ? Math.max(0, opts.runAt.getTime() - Date.now())
+            : 0;
+      const id = Math.random().toString(36).slice(2);
+      const timer = setTimeout(async () => {
+        const h = jobHandlers.get(name);
+        if (h) await h(payload);
+        timers.delete(timer);
+      }, delay);
+      timers.add(timer);
+      return { id };
+    },
+    async cancel() {
+      let n = 0;
+      for (const t of timers) {
+        clearTimeout(t);
+        n++;
+      }
+      timers.clear();
+      return n;
+    },
+    process<T = unknown>(name: string, handler: (payload: T) => Promise<void>) {
+      jobHandlers.set(name, (p: unknown) => handler(p as T));
+    },
+  };
+
   const base: Services = {
     db: {} as unknown as Services['db'],
     cache,
     logger,
     events,
     queue,
+    jobs,
   };
 
   return { ...base, ...overrides } as Services;

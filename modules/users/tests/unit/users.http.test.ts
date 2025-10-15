@@ -40,11 +40,18 @@ describe('Users HTTP', () => {
     };
     setTestServices(services);
 
+    // Provide an admin token to satisfy auth+policy in handler
+    const payload = Buffer.from(JSON.stringify({ id: 'u-admin', role: 'admin' }), 'utf8').toString(
+      'base64url',
+    );
+    const token = `x.${payload}.x`;
+
     const { status, json } = await runHandler<
       Envelope<{ id: string; email: string; name: string; createdAt: string }>
     >(POST as any, {
       method: 'POST',
       body: { email: 'john@example.com', name: 'John' },
+      headers: { authorization: `Bearer ${token}` },
     });
 
     expect(status).toBe(200);

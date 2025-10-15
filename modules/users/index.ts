@@ -2,7 +2,7 @@ import type { Module } from '@/core/module';
 import type { ServicesBuilder } from '@/core/services';
 import { UsersService } from './domain/services/users.service';
 import { registerUserEvents } from './events/onUserCreated';
-import { registerJobProcessors } from './jobs/syncProfile.job';
+import { registerJobProcessors, registerExampleScheduler } from './jobs/syncProfile.job';
 
 export const UsersModule: Module = {
   name: 'users',
@@ -19,6 +19,7 @@ export const UsersModule: Module = {
     const s = await services;
     registerUserEvents(s);
     registerJobProcessors(s);
+    await registerExampleScheduler(s);
   },
 };
 

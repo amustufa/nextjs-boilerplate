@@ -1,4 +1,5 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 import { loadUsersViaApi } from '@/modules/users/ui/loaders';
 import UsersListClient from '@/modules/users/ui/fragments/UsersListClient';

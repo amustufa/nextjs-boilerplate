@@ -1,4 +1,5 @@
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 import { loadUsersViaServices } from '@/modules/users/ui/loaders';
 import { createUserAction } from './actions';

@@ -37,7 +37,8 @@ export const GET = HttpRequest(ListUsersRequest)({ auth: false }, async function
   const { query } = this.validate();
   const { items, total } = await this.services.users!.service.list(query.page, query.perPage);
   const payload = { items };
-  const etag = etagFor({ items, total, page: query.page, perPage: query.perPage });
+  // Use a stable ETag derived from pagination and counts to avoid flapping on transient fields
+  const etag = etagFor({ count: items.length, total, page: query.page, perPage: query.perPage });
   const cond = handleConditionalGet(this.request, etag);
   if (cond.notModified) return cond.response!;
   return NextResponse.json(ok(payload, pageMeta(query.page, query.perPage, total)), {

@@ -175,9 +175,13 @@ export function HttpRequest<B extends ZodTypeAny, Q extends ZodTypeAny, P extend
         }
 
         const data = await Promise.resolve(handler.call(tools, tools));
+        // If handler returns a Response/NextResponse, forward it as-is
+        if (data instanceof Response) return data;
+        // If handler returns a pre-shaped envelope, forward it
         if (data && typeof data === 'object' && 'ok' in (data as { ok: unknown })) {
           return NextResponse.json(data, { status: opts.status ?? 200 });
         }
+        // Otherwise, wrap into envelope
         return NextResponse.json(ok(data, { durationMs: Date.now() - started }), {
           status: opts.status ?? 200,
         });

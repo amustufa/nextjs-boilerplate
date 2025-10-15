@@ -1,6 +1,5 @@
-import type { PrismaClient } from '@prisma/client';
 import type { Cache } from '@/core/services';
-import { userListSelect } from '@/modules/users/data/selects';
+import { userListSelect, type UserListRow } from '@/modules/users/data/selects';
 import {
   toUserListItem,
   type UsersListResult,
@@ -8,9 +7,21 @@ import {
 import type { CreateUserInput } from '@/modules/users/contracts';
 import type { UserRecord } from '@/modules/users/types';
 
+type PrismaLike = {
+  user: {
+    create(args: { data: CreateUserInput }): Promise<UserRecord>;
+    count(): Promise<number>;
+    findMany(args: {
+      select: typeof userListSelect;
+      skip: number;
+      take: number;
+    }): Promise<UserListRow[]>;
+  };
+};
+
 export class UsersService {
   constructor(
-    private prisma: PrismaClient,
+    private prisma: PrismaLike,
     private cache?: Cache,
   ) {}
 

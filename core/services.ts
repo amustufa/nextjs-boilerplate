@@ -23,9 +23,40 @@ export interface Queue {
   add<T = unknown>(
     name: string,
     payload: T,
-    opts?: { delayMs?: number; attempts?: number },
+    opts?: { delayMs?: number; attempts?: number; idempotencyKey?: string },
   ): Promise<void>;
   process?<T = unknown>(name: string, handler: (payload: T) => Promise<void>): void;
+}
+
+export interface JobsScheduleOptions {
+  runAt?: Date;
+  delayMs?: number;
+  everyMs?: number;
+  cron?: string;
+  idempotencyKey?: string;
+}
+
+export interface JobsCancelOptions {
+  id?: string;
+  name?: string;
+  idempotencyKey?: string;
+  cron?: string;
+  everyMs?: number;
+}
+
+export interface Jobs {
+  schedule<T = unknown>(
+    name: string,
+    payload: T,
+    opts: JobsScheduleOptions,
+  ): Promise<{ id: string }>;
+  cancel(opts: JobsCancelOptions): Promise<number>;
+  process<T = unknown>(name: string, handler: (payload: T) => Promise<void>): void;
+}
+
+export interface Lock {
+  acquire(key: string, ttlMs: number): Promise<{ ok: true; token: string } | { ok: false }>;
+  release(key: string, token: string): Promise<void>;
 }
 
 export interface ServicesBase {
@@ -34,6 +65,8 @@ export interface ServicesBase {
   logger: Logger;
   events: Events;
   queue: Queue;
+  jobs?: Jobs;
+  lock?: Lock;
 }
 
 // Augment this in modules to add typed namespaces e.g. `users`.

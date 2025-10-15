@@ -16,6 +16,7 @@
 - `pnpm prisma:generate` — collect + run `prisma generate --schema prisma`
 - `pnpm lint` / `pnpm typecheck`
 - `pnpm test` (Vitest) / `pnpm test:ui` (Playwright)
+- `pnpm jobs:stats` / `pnpm jobs:cancel` / `pnpm jobs:stats:sqs` — job maintenance CLIs
 
 ## Structure
 
@@ -47,7 +48,7 @@ Routing Note
 ## Notes
 
 - Dual runtime: set `export const runtime = 'edge' | 'node'` per route; services bind edge-safe Prisma when needed.
-- Adapters: in-memory `cache`/`queue` with easy swap to Redis/SQS.
+- Adapters: provider-agnostic `cache`/`queue`/`jobs`/`lock` with env-driven backends (Redis/BullMQ/SQS).
 - Auth: omitted initially; wire in `core/http` and services when ready.
 
 ### Runtime Guidance (Edge vs Node)
@@ -63,3 +64,9 @@ Routing Note
 - `/users/api-example` — server action proxy that calls the API handler; page reads via API.
 - `/users/server-action-redirect` — PRG variant; server action revalidates then `redirect()` to avoid returning RSC payload and prevent resubmits.
 - `/users/client-hook` — server renders initial list; client fragment uses `useUsersQuery` to fetch from `/users/api` and keep data fresh.
+
+## Further Reading
+
+- Developer Guide: documentation/developer-guide.md
+- Providers & Examples: documentation/providers-and-examples.md
+- Production Setup: documentation/production-setup.md

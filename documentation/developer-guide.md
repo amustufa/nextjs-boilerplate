@@ -12,6 +12,45 @@
 - Prisma Multi-file: put module schemas in `modules/*/schema/*.prisma`; run `pnpm prisma:collect` to symlink into `prisma/schemas/`.
 - Output Types: define Prisma `select` per view and map with typed pipes (no DTO classes).
 
+### Provider-Agnostic Infra
+
+- Use `this.services.cache`, `this.services.queue`, `this.services.jobs`, and `this.services.lock` via core contracts — never import provider SDKs directly in modules.
+- Providers are selected by env in runtime (`CACHE_BACKEND`, `QUEUE_BACKEND`, `JOBS_BACKEND`, `LOCK_BACKEND`), with in-memory fallbacks for dev.
+- Contracts are stable and provider-agnostic. Backends normalize options (e.g., attempts, delays, idempotency keys) behind the adapters.
+
+#### Backends
+
+- Cache: `memory`, `redis`
+- Queue: `memory`, `bullmq` (shared queue `JOBS_QUEUE_NAME`)
+- Jobs: `memory`, `bullmq` (repeatable jobs), `sqs` (one-off delays only; suggest EventBridge for cron)
+- Lock: `memory`, `redis`
+
+#### Env Examples
+
+```
+# Redis/BullMQ
+CACHE_BACKEND=redis
+QUEUE_BACKEND=bullmq
+JOBS_BACKEND=bullmq
+LOCK_BACKEND=redis
+REDIS_URL=redis://localhost:6379
+JOBS_QUEUE_NAME=app:jobs
+
+# SQS
+JOBS_BACKEND=sqs
+AWS_REGION=us-east-1
+SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789012/app-jobs.fifo
+SQS_FIFO=true
+SQS_MESSAGE_GROUP_ID=app-jobs
+```
+
+#### CLI
+
+- `pnpm jobs:stats --queues users.sync_profile`
+- `pnpm jobs:cancel --id <id>`
+- `pnpm jobs:cancel --name users.sync_profile --idempotencyKey key123 --cron "*/5 * * * *"`
+- `pnpm jobs:cancel --name users.sync_profile --idempotencyKey key123 --everyMs 60000`
+
 ## Runtime Choice (Edge vs Node)
 
 - Edge: keep handlers thin (validate, authorize, simple reads/compute). No module boot, event listeners, job processors, or Node-only adapters.

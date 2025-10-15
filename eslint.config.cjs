@@ -13,11 +13,30 @@ const compat = new FlatCompat({
 const globals = require('globals');
 
 module.exports = [
-  { ignores: ['node_modules/', '.next/', 'dist/', 'eslint.config.cjs', '.eslintrc.cjs', 'postcss.config.js'] },
+  { ignores: ['node_modules/', '.next/', 'dist/', 'coverage/', 'eslint.config.cjs', '.eslintrc.cjs', 'postcss.config.js'] },
   // Global environment
   {
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
+    },
+  },
+  // App directory: disallow inline object types in exported signatures too
+  {
+    files: ['app/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: [
+            'ExportNamedDeclaration > FunctionDeclaration > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration VariableDeclaration VariableDeclarator > TSTypeAnnotation TSTypeLiteral',
+            'ExportNamedDeclaration ClassDeclaration MethodDefinition > TSTypeAnnotation TSTypeLiteral',
+            "ExportNamedDeclaration :matches(FunctionDeclaration, VariableDeclarator, MethodDefinition) TSTypeReference[ typeName.name='Promise' ] TSTypeParameterInstantiation > TSTypeLiteral",
+          ].join(', '),
+          message:
+            'Use named types or a shared generic (e.g., Result<...>) in exported signatures; avoid inline object types in app/ as well.',
+        },
+      ],
     },
   },
   // UI structure enforcement: components/fragments/forms must be props-only (no services/fetch/cookies/revalidate)
@@ -265,6 +284,7 @@ module.exports = [
   {
     files: ['**/tests/**/*.test.ts'],
     rules: {
+      'no-restricted-imports': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
