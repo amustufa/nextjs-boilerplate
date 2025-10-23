@@ -1,0 +1,17 @@
+model File {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  bucket       String?
+  size         Int
+  contentType  String
+  etag         String?
+  checksum     String?
+  lastModified DateTime?
+  acl          String?
+  metadata     Json
+  width        Int?
+  height       Int?
+  createdAt    DateTime @default(now())
+  createdBy    String?
+}
+

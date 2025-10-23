@@ -72,3 +72,8 @@
   - Components/fragments/forms do not use Services/fetch/cookies/revalidate.
   - Loaders are server-only and contain no JSX.
   - Client data fetching is allowed only in `modules/*/ui/hooks/*` (React Query/SWR/custom fetch) for smoother UX; hydrate from server loaders.
+
+## Linting and Config Policy
+
+- Do not change ESLint, Prettier, or TypeScript compiler options unless explicitly requested by the maintainers.
+- Avoid relaxing rules to make code pass; prefer fixing code to satisfy existing rules.

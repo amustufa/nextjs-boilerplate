@@ -12,6 +12,24 @@
 - Prisma Multi-file: put module schemas in `modules/*/schema/*.prisma`; run `pnpm prisma:collect` to symlink into `prisma/schemas/`.
 - Output Types: define Prisma `select` per view and map with typed pipes (no DTO classes).
 
+### Seeding
+
+- Seeders live under `modules/<module>/seeds/*.seed.ts` (optional `seeds/global/*.seed.ts`).
+- Each seeder exports a default object `{ name: string; order?: number; tags?: string[]; run(ctx) }`.
+- Commands:
+  - `pnpm db:seed` — run all seeders in stable order.
+  - `pnpm db:seed --preview` — list which seeders would run.
+  - `pnpm db:seed --only users,posts` — run only selected modules.
+  - `pnpm db:seed --tags dev` — run only seeders matching tags.
+  - `pnpm db:reset` — reset database then seed.
+- Safety: refuses on production unless `--force`. Seeders should be idempotent (`upsert`, `connectOrCreate`).
+
+### Module Scaffolder
+
+- Interactive generator: `pnpm module:generate`.
+- Prompts to create service, HTTP example, Prisma schema, seed example, and events/jobs stubs.
+- Optionally wires the module into `core/runtime/services.ts` (imports, `.register`, and `.boot`).
+
 ### Provider-Agnostic Infra
 
 - Use `this.services.cache`, `this.services.queue`, `this.services.jobs`, and `this.services.lock` via core contracts — never import provider SDKs directly in modules.

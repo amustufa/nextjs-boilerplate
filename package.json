@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "lint:arch": "eslint app/**/route.{ts,tsx} modules/**/http/**/*.{ts,tsx}",
     "lint:fix": "eslint . --fix",
     "lint:ci": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
@@ -21,6 +22,9 @@
     "prisma:reset": "pnpm prisma:collect && prisma migrate reset --schema prisma --skip-generate --skip-seed",
     "prisma:push": "pnpm prisma:collect && prisma db push --schema prisma",
     "db:prepare": "pnpm prisma:migrate && pnpm prisma:generate",
+    "db:seed": "tsx scripts/seed-runner.ts",
+    "db:seed:dev": "NODE_ENV=development tsx scripts/seed-runner.ts --tags dev",
+    "db:reset": "pnpm prisma:reset && pnpm db:seed",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --dir modules --dir core",
@@ -36,7 +40,11 @@
     "prepare": "husky install",
     "jobs:stats": "tsx scripts/jobs-stats.ts",
     "jobs:cancel": "tsx scripts/jobs-cancel.ts",
-    "jobs:stats:sqs": "tsx scripts/jobs-stats-sqs.ts"
+    "jobs:stats:sqs": "tsx scripts/jobs-stats-sqs.ts",
+    "module:generate": "tsx scripts/module-generate.ts"
+  },
+  "prisma": {
+    "seed": "tsx scripts/seed-runner.ts"
   },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.910.0",
@@ -65,6 +73,7 @@
     "@typescript-eslint/parser": "^8.0.0",
     "@vitest/coverage-v8": "^2.1.9",
     "autoprefixer": "^10.4.19",
+    "@faker-js/faker": "^9.2.0",
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",

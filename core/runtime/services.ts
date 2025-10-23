@@ -6,7 +6,9 @@ import { createEventsBus } from '@/core/events/adapter';
 import { createQueue } from '@/core/queue';
 import { createJobs } from '@/core/jobs';
 import { createLock } from '@/core/lock';
+import { createStorage } from '@/core/storage/adapter';
 import { UsersModule } from '@/modules/users';
+import { FilesModule } from '@/modules/files';
 
 const globals = globalThis as unknown as {
   __services_node?: Promise<Services>;
@@ -24,7 +26,9 @@ function bootstrapServices(runtime: 'node' | 'edge'): Promise<Services> {
     (b) => b.set('queue', () => createQueue()),
     (b) => b.set('jobs', () => createJobs()),
     (b) => b.set('lock', () => createLock()),
+    (b) => b.set('storage', () => createStorage()),
     UsersModule.register,
+    FilesModule.register,
   ];
   const servicesPromise = createServices(steps);
   // After services are constructed, invoke module boot to wire events/jobs, only on node runtime.

@@ -1,5 +1,56 @@
 # Instructions for AI Agents Working on This Project
 
+## Architectural Quickstart
+
+- Layers
+  - `app/`: route handlers and server actions. Keep them thin: validate with Zod, authorize, call services, return normalized envelopes.
+  - `modules/*`: vertical slices (schema/domain/data/http/contracts/events/jobs). HTTP layer lives in `modules/*/http` and uses `HttpRequest`.
+  - `core/*`: shared runtime (db/cache/logger/events/queue/jobs/lock/http utilities) and the Services Registry wiring.
+- Services Registry
+  - Access shared resources via `const services = await getServices('node'|'edge')` or `this.services` in handlers. Do not import adapters directly from modules.
+  - Modules register their services in `Module.register` and wire listeners/processors in `Module.boot` (Node runtime only).
+- HTTP Pattern
+  - Define a request once via `defineRequest({ body, query, params })`.
+  - Implement with `HttpRequest(Req)(opts, async function(){ const { body, query, params } = this.validate(); ... })`.
+  - Return `ok(data, meta)` or a `NextResponse` if you construct it yourself; consider ETag/304 for stable GET lists.
+  - Example (controller template):
+
+    ```ts
+    // modules/example/http/items.api.ts
+    import { defineRequest, HttpRequest } from '@/core/http/request';
+    import { z } from 'zod';
+    import { ok } from '@/core/http/response';
+    import { pageMeta } from '@/core/http/pagination';
+
+    const ListItemsReq = defineRequest({
+      body: z.object({}),
+      query: z.object({
+        page: z.coerce.number().min(1).default(1),
+        perPage: z.coerce.number().min(1).max(100).default(20),
+      }),
+      params: z.object({}),
+    });
+
+    export const GET = HttpRequest(ListItemsReq)({ auth: false }, async function () {
+      const { query } = this.validate();
+      // Call services (no direct Prisma here)
+      const { items, total } = await this.services.example!.service.list(query.page, query.perPage);
+      return ok({ items }, pageMeta(query.page, query.perPage, total));
+    });
+    ```
+
+- Prisma
+  - Never use Prisma directly in controllers/HTTP. Injected via `services.db`; per‑module services wrap DB calls and expose intentful APIs.
+  - Put Prisma `select` rules in `modules/*/data/selects.ts`; shape outputs via projections instead of DTO classes.
+- Type Safety
+  - Use strict types. Avoid `any`. Prefer concrete types and narrow inputs with Zod; use `unknown` only at true boundaries (core adapters/http/testing).
+
+## Linting and Config Policy (Strict)
+
+- NEVER change ESLint, Prettier, or TypeScript strictness rules unless explicitly requested by the user.
+- Do not modify `eslint.config.cjs`, `.eslintrc.cjs`, `.prettierrc`, Prettier settings in `package.json`, or `tsconfig.json` compiler options unless the user clearly instructs you to do so.
+- If a change appears necessary to make progress, stop and ask for approval; suggest code‑level fixes instead of relaxing rules.
+
 ## Checklist TL;DR
 
 - Keep routable files under `app/` (pages/routes/server actions); reusable UI under `modules/*/ui/components/*`.
@@ -74,6 +125,7 @@ These guidelines ensure changes align with the architecture and remain safe, typ
 
 - Enforce TypeScript strictness and ESLint rules noted in `documentation/architecture/22-type-safety.md`.
 - Do not introduce `any`, `ts-ignore`, or unsafe operations. Narrow unknown via Zod.
+- Do not relax lint/type rules, do not alter config files without explicit user approval.
 
 ## PR Checklist for AI Agents
 

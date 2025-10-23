@@ -5,6 +5,7 @@ import { GET, POST } from '@/modules/users/http/user.api';
 import { runHandler } from '@/core/testing/http';
 import { setTestServices, clearTestServices } from '@/core/testing/services';
 import type { Services } from '@/core/services';
+import { createMemoryStorage } from '@/core/storage/memory';
 
 describe('Users HTTP', () => {
   beforeEach(() => {
@@ -31,6 +32,7 @@ describe('Users HTTP', () => {
       logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
       events,
       queue,
+      storage: createMemoryStorage(),
       users: {
         service: {
           create: vi.fn().mockResolvedValue(created),
@@ -69,6 +71,7 @@ describe('Users HTTP', () => {
       logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
       events: { emit: vi.fn(), on: vi.fn() },
       queue: { add: vi.fn() },
+      storage: createMemoryStorage(),
       users: {
         service: {
           list: vi.fn().mockResolvedValue({ items, total: 1 }),

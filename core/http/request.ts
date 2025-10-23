@@ -20,7 +20,7 @@ type Spec<B extends ZodTypeAny, Q extends ZodTypeAny, P extends ZodTypeAny> = {
   query: Q;
   params: P;
 };
-export type PolicyCheck<T = unknown> = {
+export type PolicyCheck<T = void> = {
   policy: Policy<T>;
   resource?: (t: RequestTools<unknown, unknown, unknown>) => Promise<T> | T;
   when?: (t: RequestTools<unknown, unknown, unknown>) => boolean;

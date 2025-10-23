@@ -10,3 +10,8 @@ Highlights
 - Routing and Request builder: `documentation/architecture/03-routing-controllers.md`.
 - DI & Services Registry: `documentation/architecture/11-di-services-registry.md`.
 - Data/Migrations: `documentation/architecture/17-data-migrations.md`.
+
+Seeding and Scaffolding
+
+- Seeding: See `README.md` and `documentation/developer-guide.md` for commands (`pnpm db:seed`, `--preview`, `--only`, `--tags`, `db:reset`) and seeder shape `{ name, order?, tags?, run }`.
+- Scaffolder: Run `pnpm module:generate` for an interactive module generator (service/http/schema/seed/events/jobs) with optional runtime wiring.

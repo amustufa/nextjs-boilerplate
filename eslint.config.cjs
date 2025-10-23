@@ -20,10 +20,57 @@ module.exports = [
       globals: { ...globals.node, ...globals.browser },
     },
   },
+  // Controllers/HTTP handlers must not use Prisma directly
+  {
+    files: ['app/**/route.{ts,tsx}', 'modules/**/http/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['@prisma/client', '@prisma/client/edge', 'pino'],
+          patterns: ['@/core/db/**'],
+          message: 'Controllers must access the DB via Services; do not import Prisma or core/db here.',
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[object.name='prisma']",
+          message: 'Controllers must use services; no direct `prisma` usage in controllers.',
+        },
+      ],
+    },
+  },
+  // Discourage unnecessary `unknown` in module domain/data/http layers
+  {
+    files: [
+      'modules/**/domain/**/*.{ts,tsx}',
+      'modules/**/data/**/*.{ts,tsx}',
+      'modules/**/http/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: ['pino'] },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSUnknownKeyword',
+          message:
+            'Avoid `unknown` in application layers; prefer concrete types and narrow at the boundary with Zod.',
+        },
+      ],
+    },
+  },
   // App directory: disallow inline object types in exported signatures too
   {
     files: ['app/**/*.{ts,tsx}'],
     rules: {
+      'no-restricted-imports': [
+        'error',
+        { paths: ['pino'] },
+      ],
       'no-restricted-syntax': [
         'error',
         {
@@ -50,6 +97,7 @@ module.exports = [
       'no-restricted-imports': [
         'error',
         {
+          paths: ['pino'],
           patterns: [
             {
               group: [
@@ -98,6 +146,7 @@ module.exports = [
       'no-restricted-imports': [
         'error',
         {
+          paths: ['pino'],
           patterns: [
             {
               group: [
@@ -276,6 +325,13 @@ module.exports = [
   // Allow runtime service wiring to import adapters directly
   {
     files: ['core/runtime/**'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+  // Allow logger adapter to import pino directly
+  {
+    files: ['core/logger/**'],
     rules: {
       'no-restricted-imports': 'off',
     },

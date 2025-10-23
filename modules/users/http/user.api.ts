@@ -13,7 +13,7 @@ export const POST = HttpRequest(CreateUserRequest)(
   {
     auth: true,
     rateLimit: { capacity: 20, refillPerSec: 2, useCache: true },
-    policies: [{ policy: canCreateUser as unknown as import('@/core/http/auth').Policy<unknown> }],
+    policies: [{ policy: canCreateUser }],
   },
   async function () {
     const { body } = this.validate();

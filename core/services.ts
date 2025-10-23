@@ -67,6 +67,7 @@ export interface ServicesBase {
   queue: Queue;
   jobs?: Jobs;
   lock?: Lock;
+  storage: import('@/core/storage/types').Storage;
 }
 
 // Augment this in modules to add typed namespaces e.g. `users`.

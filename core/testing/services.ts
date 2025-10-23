@@ -1,4 +1,5 @@
 import type { Services } from '@/core/services';
+import { createMemoryStorage } from '@/core/storage/memory';
 
 export function createMockServices(overrides: Partial<Services> = {}): Services {
   const cacheStore = new Map<string, { v: unknown; exp: number | null }>();
@@ -100,6 +101,7 @@ export function createMockServices(overrides: Partial<Services> = {}): Services 
     events,
     queue,
     jobs,
+    storage: createMemoryStorage(),
   };
 
   return { ...base, ...overrides } as Services;

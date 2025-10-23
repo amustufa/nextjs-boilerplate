@@ -2,6 +2,13 @@
 
 - Modules-first architecture with typed Services Registry, normalized HTTP layer, Prisma multi-file schemas, Tailwind, Vitest, and Playwright.
 
+## AI Agents
+
+- Please read the project guide for AI agents before making changes: `documentation/instructions/for-ai-agents.md`.
+- Two key rules we enforce:
+  - Controllers must not use Prisma directly; call services instead.
+  - Avoid `unknown` where not necessary; prefer concrete types and narrow at boundaries with Zod.
+
 ## Quick Start
 
 - Copy `.env.example` to `.env` and set `DATABASE_URL` (Postgres).
@@ -17,6 +24,9 @@
 - `pnpm lint` / `pnpm typecheck`
 - `pnpm test` (Vitest) / `pnpm test:ui` (Playwright)
 - `pnpm jobs:stats` / `pnpm jobs:cancel` / `pnpm jobs:stats:sqs` — job maintenance CLIs
+- `pnpm db:seed` — run modular seeders (see Seeding)
+- `pnpm db:reset` — reset database then seed
+- `pnpm module:generate` — interactive module scaffolder
 
 ## Structure
 
@@ -24,6 +34,21 @@
 - `modules/*` — vertical slices (schema/domain/data/http/contracts/events/jobs)
 - `core/*` — shared runtime (db/cache/queue/events/logger/http)
 - `prisma/base.prisma` + `prisma/schemas/*` — multi-file Prisma
+
+### Seeding
+
+- Seeders live under `modules/<module>/seeds/*.seed.ts` (and optional `seeds/global/*.seed.ts`).
+- Each seeder exports a default object `{ name, order?, tags?, run(ctx) }`.
+- Run all: `pnpm db:seed`. Preview: `pnpm db:seed --preview`.
+- Target modules: `pnpm db:seed --only users,posts`. Filter by tags: `--tags dev`.
+- Safety: refuses on production unless `--force`. Supports `--continue` to keep going after failures.
+- Example: see `modules/users/seeds/001_users.seed.ts`.
+
+Factories
+
+- Minimal faker-based factories can live alongside seeds, e.g. `modules/users/seeds/factories/user.factory.ts`.
+- Example bulk users: `modules/users/seeds/002_users_bulk.seed.ts` (uses `@faker-js/faker`).
+- Customize count via `SEED_USERS_COUNT=50 pnpm db:seed --tags dev`.
 
 Routing Note
 
@@ -70,3 +95,4 @@ Routing Note
 - Developer Guide: documentation/developer-guide.md
 - Providers & Examples: documentation/providers-and-examples.md
 - Production Setup: documentation/production-setup.md
+- To generate a new module with seed/HTTP/service stubs, run `pnpm module:generate` and follow prompts.
