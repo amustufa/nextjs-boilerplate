@@ -1,6 +1,6 @@
 'use server';
 
-import { CreateUserSchema } from '@/modules/users/contracts';
+import { CreateUserSchema } from '@/modules/users/interfaces';
 import { revalidatePath } from 'next/cache';
 
 type ActionOk = { ok: true };

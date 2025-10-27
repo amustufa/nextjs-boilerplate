@@ -4,7 +4,7 @@
 
 - Layers
   - `app/`: route handlers and server actions. Keep them thin: validate with Zod, authorize, call services, return normalized envelopes.
-  - `modules/*`: vertical slices (schema/domain/data/http/contracts/events/jobs). HTTP layer lives in `modules/*/http` and uses `HttpRequest`.
+  - `modules/*`: vertical slices (schema/domain/data/http/interfaces/events/jobs). HTTP layer lives in `modules/*/http` and uses `HttpRequest`.
   - `core/*`: shared runtime (db/cache/logger/events/queue/jobs/lock/http utilities) and the Services Registry wiring.
 - Services Registry
   - Access shared resources via `const services = await getServices('node'|'edge')` or `this.services` in handlers. Do not import adapters directly from modules.
@@ -68,7 +68,7 @@ These guidelines ensure changes align with the architecture and remain safe, typ
 - Follow the Services Registry: inject shared services (db, cache, logger, events, queue) via Services; do not import adapters directly in modules.
 - Use the Request builder API: define Zod-based requests once with `defineRequest` and use `HttpRequest(RequestSpec)` in routes.
 - Strict typing: no `any`. Prefer `unknown` and narrow via Zod or explicit transformations. Derive types from Prisma `select` rules and map with typed pipes.
-- Module boundaries: only import across modules via `contracts/`, public `types.ts`, or the Services Registry. No deep imports.
+- Module boundaries: only import across modules via `interfaces/`, public `types.ts`, or the Services Registry. No deep imports.
 - Prisma schemas are module-local: add `.prisma` under `modules/*/schema`, and run `pnpm prisma:collect` before generate/migrate.
 - Routing location: Keep routable files (pages, route handlers) under `app/`. Use `modules/*/ui/components/*` for reusable UI fragments only.
   - UI structure under `modules/<module>/ui`:
@@ -106,7 +106,7 @@ These guidelines ensure changes align with the architecture and remain safe, typ
   - Export public types from `modules/*/types.ts` and aggregate in `modules/types.ts` if needed.
   - Use type-only imports.
 - Events and jobs
-  - Define event/job names and payload types under `modules/*/contracts` or colocated.
+  - Define event/job names and payload types under `modules/*/interfaces` or colocated.
   - Register listeners/processors in the module `boot()` with `services.events` / `services.queue`.
   - Invalidate caches via event handlers when needed.
 - Auth & policies
@@ -168,7 +168,7 @@ These guidelines ensure changes align with the architecture and remain safe, typ
 
 - Deep cross-module imports.
   - Wrong: `import { X } from '@/modules/other/domain/...'`.
-  - Right: use `@/modules/other/contracts` or `this.services.other.<api>`.
+  - Right: use `@/modules/other/interfaces` or `this.services.other.<api>`.
 
 - Forgetting to register events/jobs in `boot()`.
   - Wrong: defining handlers without wiring them.

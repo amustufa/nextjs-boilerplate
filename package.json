@@ -27,8 +27,8 @@
     "db:reset": "pnpm prisma:reset && pnpm db:seed",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:unit": "vitest run --dir modules --dir core",
-    "test:unit:watch": "vitest --dir modules --dir core",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "playwright test",
     "e2e": "playwright test",
@@ -88,7 +88,11 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.16.2",
     "typescript": "^5.6.2",
-    "vitest": "^2.0.5"
+    "vitest": "^2.0.5",
+    "eslint-plugin-boundaries": "^4.2.1"
+  },
+  "engines": {
+    "node": ">=20 <21"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": [

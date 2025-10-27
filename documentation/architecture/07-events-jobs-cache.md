@@ -21,13 +21,13 @@ export class EventBus extends EventEmitter {
 - Location: Each module defines its events in `modules/<module>/events/*` and jobs in `modules/<module>/jobs/*`.
 - Registration: In the module `boot()` function, register event listeners and job processors with the core bus/queue.
 - Namespacing: Use the module name to namespace event types and job names (e.g., `users.user.created`, `users.sync_profile`).
-- Contracts: Event payloads and job payloads should be typed and exported from the module’s contracts folder, or colocated next to handlers if internal.
+- Interfaces: Event payloads and job payloads should be typed and exported from the module’s interfaces folder, or colocated next to handlers if internal.
 - Invalidation: Modules subscribe to their own domain events to invalidate relevant cache keys.
 
 ### Example: Users module event + job
 
 ```ts
-// modules/users/contracts/events.ts
+// modules/users/interfaces/events.ts
 export type UserCreatedPayload = { id: string; email: string };
 export const USER_CREATED = 'users.user.created' as const;
 ```
@@ -35,7 +35,7 @@ export const USER_CREATED = 'users.user.created' as const;
 ```ts
 // modules/users/events/onUserCreated.ts
 import type { Services } from '@/core/services';
-import { USER_CREATED, type UserCreatedPayload } from '@/modules/users/contracts/events';
+import { USER_CREATED, type UserCreatedPayload } from '@/modules/users/interfaces/events';
 export function registerUserEvents(services: Services) {
   services.events.on<UserCreatedPayload>(USER_CREATED, async (p) => {
     // cache invalidation example

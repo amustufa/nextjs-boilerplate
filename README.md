@@ -4,7 +4,7 @@
 
 ## AI Agents
 
-- Please read the project guide for AI agents before making changes: `documentation/instructions/for-ai-agents.md`.
+- Please read AGENTS.md before making changes: `AGENTS.md`.
 - Two key rules we enforce:
   - Controllers must not use Prisma directly; call services instead.
   - Avoid `unknown` where not necessary; prefer concrete types and narrow at boundaries with Zod.
@@ -27,11 +27,12 @@
 - `pnpm db:seed` — run modular seeders (see Seeding)
 - `pnpm db:reset` — reset database then seed
 - `pnpm module:generate` — interactive module scaffolder
+  - Prompts can include domain service, HTTP handlers, policies, seeds, and test stubs (unit/HTTP/E2E).
 
 ## Structure
 
 - `app/(modules)/*` — routes re-export module handlers
-- `modules/*` — vertical slices (schema/domain/data/http/contracts/events/jobs)
+- `modules/*` — vertical slices (schema/domain/data/http/interfaces/events/jobs)
 - `core/*` — shared runtime (db/cache/queue/events/logger/http)
 - `prisma/base.prisma` + `prisma/schemas/*` — multi-file Prisma
 
@@ -96,3 +97,20 @@ Routing Note
 - Providers & Examples: documentation/providers-and-examples.md
 - Production Setup: documentation/production-setup.md
 - To generate a new module with seed/HTTP/service stubs, run `pnpm module:generate` and follow prompts.
+
+## Testing & TDD
+
+- See documentation/TDD.md for the enforced TDD workflow (pre-commit test-change guard, pre-push coverage, CI checks) and testing conventions.
+
+### TDD Quick Start
+
+- Write a failing test under `tests/unit` or `modules/<mod>/tests/unit`.
+- Run in watch mode: `pnpm test:watch`.
+- Implement the minimal code to pass; keep UI props-only and use server loaders/actions.
+- Commit: hooks format/lint, typecheck, enforce tests-changed, and run unit tests.
+- Push: `pre-push` enforces lint:ci, typecheck, and coverage; CI repeats and runs E2E.
+- Exempt rare cases by adding globs to `.tdd-exempt` or via `TDD_EXEMPT_GLOBS` env var.
+
+## PRs
+
+- Pull requests should follow the template in `.github/PULL_REQUEST_TEMPLATE.md` and include tests and coverage for any source changes.

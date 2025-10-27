@@ -52,7 +52,7 @@ module.exports = {
 
 - `as any`, `any`-typed parameters/fields, or ts-ignore comments without explanation.
 - Direct imports of core shared adapters (cache/logger/queue/events) from module code; obtain them via the Services Registry.
-- Deep imports across modules (bypass contracts/services/type barrels).
+- Deep imports across modules (bypass interfaces/services/type barrels).
 
 ## Allowed Exceptions
 

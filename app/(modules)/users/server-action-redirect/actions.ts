@@ -1,8 +1,8 @@
 'use server';
 
-import { CreateUserSchema } from '@/modules/users/contracts';
+import { CreateUserSchema } from '@/modules/users/interfaces';
 import { getServices } from '@/core/runtime/services';
-import { USER_CREATED } from '@/modules/users/contracts/events';
+import { USER_CREATED } from '@/modules/users/interfaces/events';
 import { enqueueSyncProfile } from '@/modules/users/jobs/syncProfile.job';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';

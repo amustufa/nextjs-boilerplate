@@ -5,7 +5,7 @@ Use these focused guides to explore and implement the boilerplate.
 - 01 Overview: goals, layout, why route groups — 01-overview.md
 - 02 Modules: anatomy, container, loader — 02-modules.md
 - 03 Routing & Requests — 03-routing-controllers.md
-- 04 Domain, Data (Prisma 6.7), Contracts — 04-domain-data-contracts.md
+- 04 Domain, Data (Prisma 6.7), Interfaces — 04-domain-data-interfaces.md
 - 05 Auth & Policies — 05-auth-policies.md
 - 06 Cross-module Interactions & Mediator — 06-interactions-mediator.md
 - 07 Events, Jobs, Cache — 07-events-jobs-cache.md

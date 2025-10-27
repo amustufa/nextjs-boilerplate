@@ -1,6 +1,6 @@
 'use server';
 
-import { CreateUserSchema } from '@/modules/users/contracts';
+import { CreateUserSchema } from '@/modules/users/interfaces';
 import { revalidatePath } from 'next/cache';
 
 export async function createUserViaApiHookPageAction(formData: FormData): Promise<void> {

@@ -17,4 +17,4 @@
 ## Output Shapes
 
 - Avoid DTO normalization classes; produce outputs by applying typed pipes over Prisma‑selected rows.
-- Each endpoint defines its Prisma `select` and a `Pipe<SelectedRow, ViewType>` (see 04-domain-data-contracts.md).
+- Each endpoint defines its Prisma `select` and a `Pipe<SelectedRow, ViewType>` (see 04-domain-data-interfaces.md).

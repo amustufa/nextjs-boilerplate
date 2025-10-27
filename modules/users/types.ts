@@ -1,4 +1,4 @@
-export type { CreateUserInput } from './contracts';
+export type { CreateUserInput } from './interfaces';
 export type { UserListItem, UsersListResult } from './domain/projections/list.projection';
 export type { UserRecord } from './domain/entities/user.entity';
 import type { Envelope } from '@/core/types';

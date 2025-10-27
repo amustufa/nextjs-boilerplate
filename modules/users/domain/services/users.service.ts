@@ -4,7 +4,7 @@ import {
   toUserListItem,
   type UsersListResult,
 } from '@/modules/users/domain/projections/list.projection';
-import type { CreateUserInput } from '@/modules/users/contracts';
+import type { CreateUserInput } from '@/modules/users/interfaces';
 import type { UserRecord } from '@/modules/users/types';
 
 type PrismaLike = {

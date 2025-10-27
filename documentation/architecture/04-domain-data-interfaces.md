@@ -1,4 +1,4 @@
-# Domain, Data (Prisma 6.7), Contracts
+# Domain, Data (Prisma 6.7), Interfaces
 
 ## Entities & Services
 
@@ -32,7 +32,7 @@ export class UsersService {
 
 - Do not use inline object types in exported service/repository/http signatures (e.g., `Promise<{ id: string; ... }>`).
 - Define named types or interfaces (e.g., `UserRecord`, `UsersListResult`) and export them from the module’s `types.ts` barrel.
-- This keeps contracts consistent, discoverable, and easier to refactor.
+- This keeps interfaces consistent, discoverable, and easier to refactor.
 
 ## Data access (Prisma 6.7 multi-file, edge-aware)
 
@@ -80,10 +80,10 @@ model User {
 
 > Prisma v6.7 multi-file schemas: Keep `datasource` + `generator` in `prisma/base.prisma`. Place module schemas next to their modules (e.g., `modules/*/schema/*.prisma`) and use a lightweight collector (copy/symlink) to expose them under `prisma/schemas/` before running Prisma CLI with `--schema prisma`. See 17-data-migrations.md.
 
-## Validation & Contracts
+## Validation & Interfaces
 
 ```ts
-// modules/users/contracts/index.ts
+// modules/users/interfaces/index.ts
 import { z } from 'zod';
 // Input schemas (validation) for incoming requests
 export const CreateUserSchema = z.object({ email: z.string().email(), name: z.string().min(1) });

@@ -41,6 +41,42 @@ module.exports = [
       ],
     },
   },
+  // Boundaries: keep layers isolated (UI -> HTTP -> Domain/Data; App -> HTTP/UI; Core runtime not directly in UI)
+  {
+    settings: {
+      'boundaries/elements': [
+        { type: 'core-runtime', pattern: 'core/runtime/**' },
+        { type: 'core-adapters', pattern: 'core/{cache,queue,events,jobs,lock,storage,logger}/**' },
+        { type: 'core-http', pattern: 'core/http/**' },
+        { type: 'module-domain', pattern: 'modules/*/domain/**' },
+        { type: 'module-data', pattern: 'modules/*/data/**' },
+        { type: 'module-http', pattern: 'modules/*/http/**' },
+        { type: 'module-ui', pattern: 'modules/*/ui/**' },
+        { type: 'module-tests', pattern: 'modules/*/tests/**' },
+        { type: 'app', pattern: 'app/**' },
+      ],
+    },
+    plugins: {
+      boundaries: require('eslint-plugin-boundaries'),
+    },
+    rules: {
+      // Default allow to avoid conflicts; explicitly restrict key flows
+      'boundaries/element-types': [
+        'error',
+        {
+          default: 'allow',
+          rules: [
+            // UI should not import adapters or module internals; allow runtime for server loaders
+            { from: 'module-ui', disallow: ['core-adapters', 'module-domain', 'module-data'] },
+            // App can access core runtime services (e.g., server actions) but not adapters or module internals
+            { from: 'app', disallow: ['core-adapters', 'module-domain', 'module-data'] },
+            // HTTP must not import core runtime/adapters directly
+            { from: 'module-http', disallow: ['core-runtime', 'core-adapters'] },
+          ],
+        },
+      ],
+    },
+  },
   // Discourage unnecessary `unknown` in module domain/data/http layers
   {
     files: [
@@ -252,11 +288,8 @@ module.exports = [
         {
           patterns: [
             {
-              group: [
-                '@/modules/*/!(contracts)/**',
-                '!@/modules/types',
-              ],
-              message: 'Import only via contracts/ or public barrels (services/types).',
+              group: ['@/modules/*/!(interfaces)/**', '!@/modules/types'],
+              message: 'Import only via interfaces/ or public barrels (services/types).',
             },
             {
               group: [

@@ -8,7 +8,7 @@ This example stitches the patterns together: types barrel, Prisma select + pipes
 - modules/users/data/selects.ts
 - modules/users/domain/projections/list.projection.ts
 - modules/users/domain/services/users.service.ts
-- modules/users/contracts/events.ts
+- modules/users/interfaces/events.ts
 - modules/users/events/onUserCreated.ts
 - modules/users/jobs/syncProfile.job.ts
 - modules/users/http/user.api.ts
@@ -18,7 +18,7 @@ This example stitches the patterns together: types barrel, Prisma select + pipes
 
 ```ts
 // modules/users/types.ts
-export type { CreateUserInput } from './contracts';
+export type { CreateUserInput } from './interfaces';
 export type { UserListItem } from './domain/projections/list.projection';
 ```
 
@@ -73,7 +73,7 @@ export class UsersService {
 ## Events
 
 ```ts
-// modules/users/contracts/events.ts
+// modules/users/interfaces/events.ts
 export type UserCreatedPayload = { id: string; email: string };
 export const USER_CREATED = 'users.user.created' as const;
 ```
@@ -81,7 +81,7 @@ export const USER_CREATED = 'users.user.created' as const;
 ```ts
 // modules/users/events/onUserCreated.ts
 import type { Services } from '@/core/services';
-import { USER_CREATED, type UserCreatedPayload } from '../contracts/events';
+import { USER_CREATED, type UserCreatedPayload } from '../interfaces/events';
 export function registerUserEvents(services: Services) {
   services.events.on<UserCreatedPayload>(USER_CREATED, async (p) => {
     await services.cache.del('users:list');

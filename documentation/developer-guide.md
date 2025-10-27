@@ -4,7 +4,7 @@
 
 ## Architecture at a Glance
 
-- Modules-first: vertical slices live under `modules/<name>` with `http`, `domain`, `data`, `contracts`, `events`, `jobs`, `schema`, `tests`, `types.ts`.
+- Modules-first: vertical slices live under `modules/<name>` with `http`, `domain`, `data`, `interfaces`, `events`, `jobs`, `schema`, `tests`, `types.ts`.
 - Routing lives under `app/`: pages, route handlers, and route-local Server Actions must be defined in the `app/` tree.
 - Services Registry: modules register a typed public API via `services.namespace('<name>', ns => ns.set('api', ...))`. Handlers access `this.services.<name>.<api>`.
 - Request Builder: declare `defineRequest({ body, query, params })` and implement with `HttpRequest(RequestSpec)({ auth?, runtime? }, async function(){ ... })`.
@@ -79,7 +79,7 @@ SQS_MESSAGE_GROUP_ID=app-jobs
 ## Module Checklist
 
 - Public API registered in `modules/<name>/index.ts` via Services Registry.
-- Contracts: request schemas and event/job payload types under `modules/<name>/contracts`.
+- Interfaces: request schemas and event/job payload types under `modules/<name>/interfaces`.
 - Data: `data/selects.ts` (Prisma selects) and `domain/views.ts` (pipes → view types).
 - HTTP: Zod specs in `http/requests/*` and route handlers in `http/*.api.ts` using `HttpRequest`.
 - UI: structure under `modules/<name>/ui`:
@@ -101,7 +101,7 @@ SQS_MESSAGE_GROUP_ID=app-jobs
 ## Coding Rules
 
 - TypeScript strict; no `any`, no `ts-ignore` without context. Narrow unknown with Zod.
-- No deep module imports; only via `contracts/`, public type barrels, or Services.
+- No deep module imports; only via `interfaces/`, public type barrels, or Services.
 - Do not import core adapters (cache/logger/queue/events) in modules; use Services.
 - Prefer type-only imports and derive types from Prisma select rules.
 - Consider ETag (and 304) for stable GET lists; add basic rate limit in dev if needed.

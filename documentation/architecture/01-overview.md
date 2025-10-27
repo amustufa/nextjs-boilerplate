@@ -3,7 +3,7 @@
 ## Goals & Principles
 
 - Module-first: Each business capability lives in a self-contained module (routes, UI, domain, data, policies, translations, tests).
-- Clear boundaries: Modules talk via contracts, not ad-hoc imports.
+- Clear boundaries: Modules talk via interfaces, not ad-hoc imports.
 - Replaceable infrastructure: Swap DB/queue/cache providers via core.
 - Zero magic: Embrace Next.js conventions while adding just enough structure.
 - DX: Scaffolders, consistent tooling, per-module tests, storybook, strict type safety.
@@ -26,7 +26,7 @@
 │  │  ├─ domain/
 │  │  ├─ schema/                      # Prisma schemas (module-local *.prisma)
 │  │  ├─ data/
-│  │  ├─ contracts/
+│  │  ├─ interfaces/
 │  │  ├─ i18n/
 │  │  ├─ tests/
 │  │  └─ index.ts

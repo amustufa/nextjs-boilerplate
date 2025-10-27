@@ -3,7 +3,7 @@ import { ok } from '@/core/http/response';
 import { pageMeta } from '@/core/http/pagination';
 import { CreateUserRequest } from './requests/create-user.request';
 import { z } from 'zod';
-import { USER_CREATED } from '@/modules/users/contracts/events';
+import { USER_CREATED } from '@/modules/users/interfaces/events';
 import { enqueueSyncProfile } from '../jobs/syncProfile.job';
 import { etagFor, handleConditionalGet } from '@/core/http/etag';
 import { canCreateUser } from '@/modules/users/domain/policies/canCreateUser';

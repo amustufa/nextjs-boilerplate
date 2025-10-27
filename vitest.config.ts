@@ -13,7 +13,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'modules/**/tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
+      reporter: ['text', 'html', 'json-summary'],
       include: ['core/**/*.ts', 'modules/**/*.ts'],
       thresholds: {
         statements: 80,

@@ -78,6 +78,15 @@ async function main() {
     const genSeed = (
       (await rl.question('Generate example seed? (Y/n): ')).trim().toLowerCase() || 'y'
     ).startsWith('y');
+    const genPolicies = (
+      (await rl.question('Generate example policy + tests? (Y/n): ')).trim().toLowerCase() || 'y'
+    ).startsWith('y');
+    const genTests = (
+      (await rl.question('Generate unit/HTTP test stubs? (Y/n): ')).trim().toLowerCase() || 'y'
+    ).startsWith('y');
+    const genE2E = (
+      (await rl.question('Generate E2E test stub? (y/N): ')).trim().toLowerCase() || 'n'
+    ).startsWith('y');
     const genEventsJobs = (
       (await rl.question('Generate events/jobs stubs? (Y/n): ')).trim().toLowerCase() || 'y'
     ).startsWith('y');
@@ -166,6 +175,20 @@ export const GET = HttpRequest(DemoRequest)({ auth: false }, async function () {
       await writeFileIfMissing(path.join(modRoot, 'http', `${slug}.api.ts`), httpTs);
     }
 
+    // Policies example
+    if (genPolicies) {
+      const policyTs = `import type { AuthUser } from '@/core/http/auth';
+
+export async function canCreate${Pascal}(user: AuthUser | null | undefined): Promise<boolean> {
+  return user?.role === 'admin';
+}
+`;
+      await writeFileIfMissing(
+        path.join(modRoot, 'domain', 'policies', `canCreate${Pascal}.ts`),
+        policyTs,
+      );
+    }
+
     // Events/jobs stubs
     if (genEventsJobs) {
       const eventsTs = `import type { Services } from '@/core/services';
@@ -223,8 +246,77 @@ export default seed;
       `UI components for ${slug} module.`,
     );
     await ensureDir(path.join(modRoot, 'data'));
-    await ensureDir(path.join(modRoot, 'contracts'));
+    await ensureDir(path.join(modRoot, 'interfaces'));
     await ensureDir(path.join(modRoot, 'tests'));
+
+    // Test stubs
+    if (genTests) {
+      const unitServiceTest = `import { describe, it, expect } from 'vitest';
+import { ${Pascal}Service } from '@/modules/${slug}/domain/services/${slug}.service';
+
+describe('${Pascal}Service', () => {
+  it('instantiates without throwing', () => {
+    const svc = new ${Pascal}Service({} as any);
+    expect(svc).toBeTruthy();
+  });
+});
+`;
+      await writeFileIfMissing(
+        path.join(modRoot, 'tests', 'unit', `${slug}.service.test.ts`),
+        unitServiceTest,
+      );
+
+      if (genHttp) {
+        const httpTest = `import { describe, it, expect } from 'vitest';
+import { runHandler } from '@/core/testing/http';
+import { GET } from '@/modules/${slug}/http/${slug}.api';
+
+describe('${slug} HTTP', () => {
+  it('GET returns ok envelope', async () => {
+    const { status, json } = await runHandler<any>(GET as any, { method: 'GET' });
+    expect(status).toBe(200);
+    expect(json.ok).toBe(true);
+    expect(json.data.module).toBe('${slug}');
+  });
+});
+`;
+        await writeFileIfMissing(
+          path.join(modRoot, 'tests', 'unit', `${slug}.http.test.ts`),
+          httpTest,
+        );
+      }
+
+      if (genPolicies) {
+        const policiesTest = `import { describe, it, expect } from 'vitest';
+import { canCreate${Pascal} } from '@/modules/${slug}/domain/policies/canCreate${Pascal}';
+
+describe('${slug} policies', () => {
+  it('allows admin to create', async () => {
+    expect(await canCreate${Pascal}({ id: 'u', role: 'admin' })).toBe(true);
+  });
+  it('denies member to create', async () => {
+    expect(await canCreate${Pascal}({ id: 'u', role: 'member' })).toBe(false);
+  });
+});
+`;
+        await writeFileIfMissing(
+          path.join(modRoot, 'tests', 'unit', 'policies.test.ts'),
+          policiesTest,
+        );
+      }
+    }
+
+    if (genE2E) {
+      const e2e = `import { test, expect } from '@playwright/test';
+
+test('${slug} placeholder e2e', async ({ page }) => {
+  // Adjust target route after you add a page for this module
+  await page.goto('http://localhost:3000/');
+  await expect(page).toHaveTitle(/.*/);
+});
+`;
+      await writeFileIfMissing(path.join(modRoot, 'tests', 'e2e', `${slug}.spec.ts`), e2e);
+    }
 
     // Optional wiring into services runtime
     let wired = false;

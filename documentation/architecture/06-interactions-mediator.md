@@ -3,7 +3,7 @@
 ## Contracts & Ports
 
 ```ts
-// modules/billing/contracts/payment.ts
+// modules/billing/interfaces/payment.ts
 export interface PaymentsPort {
   charge(opts: { userId: string; amount: number }): Promise<{ id: string }>;
 }

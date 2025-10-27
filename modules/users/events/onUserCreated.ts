@@ -1,5 +1,5 @@
 import type { Services } from '@/core/services';
-import { USER_CREATED, type UserCreatedPayload } from '@/modules/users/contracts/events';
+import { USER_CREATED, type UserCreatedPayload } from '@/modules/users/interfaces/events';
 
 export function registerUserEvents(services: Services): void {
   services.events.on<UserCreatedPayload>(USER_CREATED, async (p) => {

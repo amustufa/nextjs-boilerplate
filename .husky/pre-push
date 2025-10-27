@@ -1,0 +1,1 @@
+pnpm lint:ci && pnpm typecheck && pnpm test:coverage

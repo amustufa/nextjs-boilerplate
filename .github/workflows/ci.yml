@@ -1,0 +1,145 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Lint, Typecheck, Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint:ci
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests with coverage
+        run: pnpm test:coverage
+
+      - name: Comment coverage summary (PRs)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'coverage/coverage-summary.json';
+            if (!fs.existsSync(path)) {
+              core.warning('coverage-summary.json not found');
+              return;
+            }
+            const summary = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const total = summary.total || {};
+            const fmt = (m) => (typeof m === 'number' ? m.toFixed(1) : 'n/a');
+            const body = [
+              'Coverage Summary:',
+              `- Statements: ${fmt(total.statements?.pct)}%`,
+              `- Branches: ${fmt(total.branches?.pct)}%`,
+              `- Functions: ${fmt(total.functions?.pct)}%`,
+              `- Lines: ${fmt(total.lines?.pct)}%`,
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage/
+
+  e2e:
+    name: Build, Start, and Run E2E
+    runs-on: ubuntu-latest
+    needs: test
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" \
+          --health-interval 5s \
+          --health-timeout 5s \
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm e2e:install
+
+      - name: Prepare database (Prisma)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+        run: |
+          pnpm prisma:collect
+          pnpm prisma:migrate -- --name init --skip-generate
+          pnpm prisma:generate
+
+      - name: Build Next.js app
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+          AUTH_JWT_SECRET: testsecret
+        run: pnpm build
+
+      - name: Start Next.js app
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+          AUTH_JWT_SECRET: testsecret
+        run: |
+          pnpm start &
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3000 >/dev/null; then
+              echo "App is up"; break;
+            fi
+            echo "Waiting for app..."; sleep 1;
+          done
+
+      - name: Run Playwright E2E
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app
+          AUTH_JWT_SECRET: testsecret
+        run: pnpm e2e
