@@ -15,6 +15,7 @@
 - Install deps: `pnpm install`
 - Generate Prisma client: `pnpm prisma:generate`
 - Dev server: `pnpm dev`
+  - Node 20 (LTS) or 22 is supported; `.nvmrc` pins 20 for consistency, but the engines range allows 22 to avoid warnings.
 
 ## Scripts
 

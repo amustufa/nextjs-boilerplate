@@ -2,7 +2,7 @@
   "name": "nextjs-boilerplate",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -92,7 +92,7 @@
     "eslint-plugin-boundaries": "^4.2.1"
   },
   "engines": {
-    "node": ">=20 <21"
+    "node": ">=20 <23"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,css,md}": [
